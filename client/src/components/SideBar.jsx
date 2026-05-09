@@ -16,13 +16,12 @@ const SideBar = () => {
 
     useEffect(() => {
         getUsers();
-    }, [onlineUsers])
+    }, [])
 
     return (
         <div className={`h-full flex flex-col bg-[#1a1a2e] border-r border-white/10 text-white overflow-hidden
             ${selectedUser ? "hidden md:flex" : "flex"}`}>
 
-            {/* Header */}
             <div className='px-4 pt-5 pb-3 border-b border-white/10 flex-shrink-0'>
                 <div className='flex justify-between items-center'>
                     <img src={assets.logo} alt="Logo" className='w-36'/>
@@ -39,7 +38,7 @@ const SideBar = () => {
                                 </div>
                             </div>
                             <div className='p-2'>
-                                <p onClick={()=>navigate("/profile")} className='cursor-pointer text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2 transition'>
+                                <p onClick={() => navigate("/profile")} className='cursor-pointer text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2 transition'>
                                     Edit Profile
                                 </p>
                                 <p onClick={logout} className='cursor-pointer text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg px-3 py-2 transition'>
@@ -53,28 +52,26 @@ const SideBar = () => {
                 <div className='flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2 mt-4 focus-within:border-violet-500 transition-colors'>
                     <img src={assets.search_icon} alt="" className='w-3.5 opacity-50'/>
                     <input
-                        onChange={(e)=>setInput(e.target.value)} value={input}
+                        onChange={(e) => setInput(e.target.value)} value={input}
                         type="text" placeholder="Search users..."
                         className='bg-transparent outline-none text-white text-xs placeholder-gray-500 flex-1'
                     />
                 </div>
             </div>
 
-            {/* Online count */}
             <div className='px-4 py-2 flex-shrink-0'>
                 <p className='text-xs text-gray-500'>{onlineUsers.length} online</p>
             </div>
 
-            {/* User List — only this scrolls */}
             <div className='flex-1 overflow-y-auto px-2 pb-4'>
                 {filteredUsers.length === 0 && (
                     <p className='text-center text-gray-500 text-xs mt-10'>No users found</p>
                 )}
-                {filteredUsers.map((user)=>(
+                {filteredUsers.map((user) => (
                     <div
-                        onClick={()=>{
+                        onClick={() => {
                             setSelectedUser(user);
-                            setUnseenMessages(prev => ({...prev, [user._id]: 0}))
+                            setUnseenMessages(prev => ({ ...prev, [user._id]: 0 }))
                         }}
                         key={user._id}
                         className={`relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 mb-1

@@ -17,15 +17,28 @@ initSocket(server);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cors());
+
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true
+}));
 
 app.use('/api/user', userRoutes);
 app.use('/api/message', messageRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, async () => {
-    await connectDB();
-    await connectCloudinary();
-    console.log(`Server running on port ${PORT}`)
-})
+const startServer = async () => {
+    try {
+        await connectDB();
+        await connectCloudinary();
+        server.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+startServer();

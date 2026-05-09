@@ -7,46 +7,63 @@ const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages, showRightSidebar, setShowRightSidebar } = useChatContext();
   const { authUser, onlineUsers } = useAuthContext();
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [imgSending, setImgSending] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    if(selectedUser) getMessages(selectedUser._id);
+    if (selectedUser) getMessages(selectedUser._id);
   }, [selectedUser])
 
   useEffect(() => {
-    if(scrollRef.current){
+    if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages])
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if(input.trim() === "") return;
+    if (input.trim() === "" || sending) return;
+    setSending(true);
     await sendMessage({ text: input.trim() });
     setInput("");
+    setSending(false);
   }
 
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
-    if(!file) return;
+    if (!file || imgSending) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5MB");
+      e.target.value = "";
+      return;
+    }
+
+    setImgSending(true);
     const reader = new FileReader();
     reader.onloadend = async () => {
       await sendMessage({ image: reader.result });
+      setImgSending(false);
+      e.target.value = "";
+    }
+    reader.onerror = () => {
+      setImgSending(false);
+      e.target.value = "";
     }
     reader.readAsDataURL(file);
   }
 
   const formatTime = (createdAt) => {
-    if(!createdAt) return "";
+    if (!createdAt) return "";
     return new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   return selectedUser ? (
     <div className='h-full flex flex-col bg-[#0f0f1a] overflow-hidden'>
 
-      {/* Header */}
       <div
-        onClick={()=>setShowRightSidebar(prev => !prev)}
+        onClick={() => setShowRightSidebar(prev => !prev)}
         className='flex-shrink-0 flex items-center gap-3 px-4 py-3 bg-[#1a1a2e] border-b border-white/10 cursor-pointer hover:bg-[#1e1b3a] transition-colors'>
         <div className='relative'>
           <img src={selectedUser?.profilePic || assets.avatar_icon} alt="" className='w-10 h-10 rounded-full object-cover'/>
@@ -61,7 +78,7 @@ const ChatContainer = () => {
           </p>
         </div>
         <img
-          onClick={(e)=>{e.stopPropagation(); setSelectedUser(null)}}
+          onClick={(e) => { e.stopPropagation(); setSelectedUser(null) }}
           src={assets.arrow_icon} alt=""
           className='md:hidden w-5 cursor-pointer opacity-70'
         />
@@ -70,7 +87,6 @@ const ChatContainer = () => {
         </div>
       </div>
 
-      {/* Messages — only this scrolls! */}
       <div className='flex-1 overflow-y-auto flex flex-col gap-2 p-4'>
         {messages.length === 0 && (
           <div className='flex flex-col items-center justify-center h-full gap-2 opacity-40'>
@@ -79,7 +95,7 @@ const ChatContainer = () => {
             <p className='text-gray-400 text-xs'>Say hello! 👋</p>
           </div>
         )}
-        {messages.map((msg, index)=>{
+        {messages.map((msg, index) => {
           const isSender = msg.senderId === authUser._id;
           return (
             <div key={msg._id || index} className={`flex items-end gap-2 ${isSender ? "justify-end flex-row-reverse" : "justify-start"}`}>
@@ -103,23 +119,31 @@ const ChatContainer = () => {
         <div ref={scrollRef}></div>
       </div>
 
-      {/* Input — always at bottom */}
       <div className='flex-shrink-0 px-4 py-3 bg-[#1a1a2e] border-t border-white/10'>
         <div className='flex items-center gap-3'>
           <div className='flex-1 flex items-center bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 gap-2 focus-within:border-violet-500 transition-colors'>
             <input
-              onChange={(e)=>setInput(e.target.value)} value={input}
-              onKeyDown={(e)=>e.key === "Enter" && handleSendMessage(e)}
+              onChange={(e) => setInput(e.target.value)} value={input}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage(e)}
               type="text" placeholder='Type a message...'
               className='flex-1 bg-transparent outline-none text-white text-sm placeholder-gray-500'
             />
             <input onChange={handleSendImage} type="file" id='image' accept='image/*' hidden/>
-            <label htmlFor="image" className='cursor-pointer opacity-60 hover:opacity-100 transition'>
-              <img src={assets.gallery_icon} alt="" className='w-5'/>
+            <label
+              htmlFor={imgSending ? undefined : "image"}
+              className={`transition ${imgSending ? "opacity-30 cursor-not-allowed" : "opacity-60 hover:opacity-100 cursor-pointer"}`}
+              title={imgSending ? "Uploading..." : "Send image"}
+            >
+              {imgSending
+                ? <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin'/>
+                : <img src={assets.gallery_icon} alt="" className='w-5'/>
+              }
             </label>
           </div>
-          <button onClick={handleSendMessage}
-            className='w-10 h-10 bg-violet-600 hover:bg-violet-500 rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0'>
+          <button
+            onClick={handleSendMessage}
+            disabled={sending || input.trim() === ""}
+            className='w-10 h-10 bg-violet-600 hover:bg-violet-500 rounded-full flex items-center justify-center transition-all active:scale-95 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed'>
             <img src={assets.send_button} alt="" className='w-5'/>
           </button>
         </div>

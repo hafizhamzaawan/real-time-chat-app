@@ -35,10 +35,11 @@ export const AuthProvider = ({ children }) => {
     }
 
     const connectSocket = (userData) => {
-        if(!userData || socket?.connected) return;
-        const newSocket = io(backendUrl, {
-            query: { userId: userData._id }
-        })
+    if(!userData || socket?.connected) return;
+    const newSocket = io(backendUrl, {
+        query: { userId: userData._id },
+        transports: ['polling']  // add this line
+    })
         newSocket.connect();
         setSocket(newSocket);
 

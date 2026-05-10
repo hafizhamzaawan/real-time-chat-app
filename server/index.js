@@ -26,15 +26,16 @@ app.use(cors({
 app.use('/api/user', userRoutes);
 app.use('/api/message', messageRoutes);
 
-const PORT = process.env.PORT || 5000;
-
 const startServer = async () => {
     try {
         await connectDB();
         await connectCloudinary();
-        server.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
+        if(process.env.NODE_ENV !== "production"){
+            const PORT = process.env.PORT || 5000;
+            server.listen(PORT, () => {
+                console.log(`Server running on port ${PORT}`);
+            });
+        }
     } catch (error) {
         console.error('Failed to start server:', error);
         process.exit(1);
@@ -42,3 +43,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+export default server;
